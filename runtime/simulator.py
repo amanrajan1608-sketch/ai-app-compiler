@@ -5,6 +5,10 @@ def simulate_execution(config):
     Proves 'Execution Awareness' by attempting to build the 
     database schema in an in-memory SQLite instance.
     """
+    # Safety Check: Ensure config is a dictionary
+    if not isinstance(config, dict):
+        return False, "Input config is not a valid dictionary."
+
     try:
         # Create a temporary database in RAM
         conn = sqlite3.connect(":memory:")
