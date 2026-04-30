@@ -63,14 +63,18 @@ class CompilerEngine:
             "config": schema
         }
 
-    def _call_ai(self, prompt):
-        """Helper to ensure we always get valid JSON back from the AI"""
+   def _call_ai(self, prompt):
         response = model.generate_content(
             prompt,
             generation_config={"response_mime_type": "application/json"}
         )
         try:
-            return json.loads(response.text)
-        except json.JSONDecodeError:
-            # Fallback if AI fails to give valid JSON (Reliability)
-            return {"error": "AI failed to produce valid JSON", "raw": response.text}
+            data = json.loads(response.text)
+            
+            # REPAIR LOGIC: If AI returns a list [ {...} ], extract the dict inside
+            if isinstance(data, list) and len(data) > 0:
+                return data[0]
+            
+            return data
+        except (json.JSONDecodeError, Exception) as e:
+            return {"error": "Invalid JSON format", "details": str(e)}

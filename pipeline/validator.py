@@ -4,6 +4,13 @@ def validate_consistency(config):
     - API fields must match DB schema
     - UI fields must map to API
     """
+    def validate_consistency(config):
+    # Safety Check: Ensure config is a dictionary
+    if not isinstance(config, dict):
+        return {
+            "is_valid": False, 
+            "errors": [f"Expected dictionary but got {type(config).__name__}"]
+        }
     errors = []
     
     # 1. Extract names for comparison
