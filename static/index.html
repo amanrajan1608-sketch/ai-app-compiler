@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI App Compiler</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
+        .loading { color: orange; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+    <h1>🚀 AI App Compiler</h1>
+    <p>Enter your app requirements below:</p>
+    <textarea id="prompt" placeholder="e.g. Build a CRM with login and dashboard..."></textarea>
+    <button onclick="generate()">Generate App Config</button>
+    
+    <div id="loader" class="loading">Compiling Pipeline (Stages 1-4)... Please wait...</div>
+    
+    <h3>Generated JSON Output:</h3>
+    <pre id="output">JSON will appear here...</pre>
+
+    <script>
+        async function generate() {
+            const prompt = document.getElementById('prompt').value;
+            const output = document.getElementById('output');
+            const loader = document.getElementById('loader');
+            
+            loader.style.display = 'block';
+            output.innerText = "Processing...";
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                const data = await response.json();
+                output.innerText = JSON.stringify(data, null, 2);
+            } catch (err) {
+                output.innerText = "Error: " + err;
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
