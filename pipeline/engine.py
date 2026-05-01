@@ -29,9 +29,22 @@ class CompilerEngine:
         return {"status": "Success" if success else "Error", "execution_log": msg, "config": schema}
 
     def _call_ai(self, prompt):
-        res = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+        """Universal Unwrapper: Ensures we ALWAYS return a dictionary"""
+        response = model.generate_content(
+            prompt,
+            generation_config={"response_mime_type": "application/json"}
+        )
         try:
-            data = json.loads(res.text)
-            return data[0] if isinstance(data, list) else data
-        except:
-            return {"error": "failed"}
+            data = json.loads(response.text)
+            
+            # If it's a list, keep taking the first element until it's a dict
+            while isinstance(data, list) and len(data) > 0:
+                data = data[0]
+            
+            # If after unwrapping it's still not a dict, wrap it in one
+            if not isinstance(data, dict):
+                return {"ai_output": data}
+                
+            return data
+        except Exception as e:
+            return {"error": "Parsing failed", "raw": response.text}
