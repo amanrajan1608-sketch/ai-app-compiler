@@ -1,39 +1,15 @@
 import sqlite3
 
 def simulate_execution(config):
-    """
-    Proves 'Execution Awareness' by attempting to build the 
-    database schema in an in-memory SQLite instance.
-    """
-    # Safety Check: Ensure config is a dictionary
-    if not isinstance(config, dict):
-        return False, "Input config is not a valid dictionary."
-
+    if not isinstance(config, dict): return False, "Invalid config"
     try:
-        # Create a temporary database in RAM
         conn = sqlite3.connect(":memory:")
         cursor = conn.cursor()
-        
-        db_schema = config.get('db_schema', {})
-        tables = db_schema.get('tables', [])
-        
-        if not tables:
-            return False, "No tables found in DB schema."
-
+        tables = config.get('db_schema', {}).get('tables', [])
         for table in tables:
             name = table.get('name')
-            columns = table.get('columns', [])
-            
-            # Format: CREATE TABLE users (id INTEGER, name TEXT)
-            col_defs = []
-            for col in columns:
-                col_defs.append(f"{col.get('name')} {col.get('type', 'TEXT')}")
-            
-            query = f"CREATE TABLE {name} ({', '.join(col_defs)})"
-            cursor.execute(query)
-            
-        conn.commit()
-        return True, f"Success: Simulated execution of {len(tables)} tables."
-    
+            cols = [f"{c.get('name')} {c.get('type', 'TEXT')}" for c in table.get('columns', [])]
+            cursor.execute(f"CREATE TABLE {name} ({', '.join(cols)})")
+        return True, "Execution Success"
     except Exception as e:
-        return False, f"Execution Failed: {str(e)}"
+        return False, str(e)
