@@ -10,7 +10,7 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 # I am setting this to 1.5-flash for your Loom video safety (1,500 requests/day).
 # If you want 2.5-flash (20 requests/day), change it to 'models/gemini-2.5-flash'
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+model = genai.GenerativeModel('models/gemini-2.5-flash')
 
 class CompilerEngine:
     async def run(self, user_prompt: str):
