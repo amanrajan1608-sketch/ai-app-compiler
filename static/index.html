@@ -1,49 +1,185 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI App Compiler</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI App Compiler | High Bar Demo</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
-        textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 10px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; }
-        .loading { color: orange; font-weight: bold; display: none; }
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        h1 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        p { color: #64748b; }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .status-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        h3 { margin-top: 30px; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+
+        pre {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: "Fira Code", monospace;
+            font-size: 14px;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+
+        .error-box {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #fee2e2;
+            display: none;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+
+<div class="container">
     <h1>🚀 AI App Compiler</h1>
-    <p>Enter your app requirements below:</p>
-    <textarea id="prompt" placeholder="e.g. Build a CRM with login and dashboard..."></textarea>
-    <button onclick="generate()">Generate App Config</button>
-    
-    <div id="loader" class="loading">Compiling Pipeline (Stages 1-4)... Please wait...</div>
-    
-    <h3>Generated JSON Output:</h3>
-    <pre id="output">JSON will appear here...</pre>
+    <p>Convert natural language into strict, executable application configurations.</p>
 
-    <script>
-        async function generate() {
-            const prompt = document.getElementById('prompt').value;
-            const output = document.getElementById('output');
-            const loader = document.getElementById('loader');
+    <textarea id="prompt" placeholder="Example: Build a CRM with login, contacts, and role-based access. Admins see analytics."></textarea>
+    
+    <button id="generateBtn" onclick="generateApp()">Compile Application</button>
+
+    <div id="statusBox" class="status-container">
+        <div class="loader"></div>
+        <span id="statusText">Orchestrating Pipeline...</span>
+    </div>
+
+    <div id="errorBox" class="error-box"></div>
+
+    <h3>Output Config (JSON)</h3>
+    <pre id="output">Result will appear here after compilation...</pre>
+</div>
+
+<script>
+    async function generateApp() {
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusBox = document.getElementById('statusBox');
+        const statusText = document.getElementById('statusText');
+        const output = document.getElementById('output');
+        const errorBox = document.getElementById('errorBox');
+
+        // Reset UI
+        errorBox.style.display = 'none';
+        output.innerText = "Compiling...";
+        statusBox.style.display = 'block';
+        generateBtn.disabled = true;
+
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: promptInput.value })
+            });
+
+            // Check if the response is JSON or HTML (Error Page)
+            const contentType = response.headers.get("content-type");
             
-            loader.style.display = 'block';
-            output.innerText = "Processing...";
-
-            try {
-                const response = await fetch('/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt })
-                });
+            if (contentType && contentType.includes("application/json")) {
                 const data = await response.json();
-                output.innerText = JSON.stringify(data, null, 2);
-            } catch (err) {
-                output.innerText = "Error: " + err;
-            } finally {
-                loader.style.display = 'none';
+                
+                if (response.ok) {
+                    // Success! Display formatted JSON
+                    output.innerText = JSON.stringify(data, null, 2);
+                    statusText.innerText = "Compilation Successful ✅";
+                } else {
+                    // JSON error from our backend (e.g. Quota Exceeded)
+                    throw new Error(data.details || data.error || "Unknown Server Error");
+                }
+            } else {
+                // Server crashed and returned an HTML error page
+                const text = await response.text();
+                console.error("Server HTML Error:", text);
+                throw new Error(`Server returned HTML (Status ${response.status}). Check Render logs.`);
             }
+
+        } catch (err) {
+            errorBox.innerText = "Error: " + err.message;
+            errorBox.style.display = 'block';
+            output.innerText = "Compilation Failed.";
+            statusText.innerText = "Pipeline Interrupted ❌";
+        } finally {
+            generateBtn.disabled = false;
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
